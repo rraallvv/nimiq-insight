@@ -1,0 +1,4 @@
+node_modules/
+peer-key/
+wallet/
+.DS_Store
