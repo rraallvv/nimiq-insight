@@ -15,25 +15,21 @@ const server = io.listen(process.env.PORT);
 // event fired every time a new client connects:
 server.on("connection", (socket) => {
 	console.info(`Client connected [id=${socket.id}]`);
-	
+
 	socket.on("disconnect", () => {
 		console.info(`Client gone [id=${socket.id}]`);
 	});
-	
+
 	socket.on("subscribe", (data) => {
-		if (data === "inv") {
-			socket.join("inv", () => {
-				console.info("Subscribed");
-			});
-		}
+		socket.join(data, () => {
+			console.info(`Subscribed ${data}`);
+		});
 	});
 
 	socket.on("unsubscribe", (data) => {
-		if (data === "inv") {
-			socket.leave("inv", () => {
-				console.info("Unsubscribed");
-			});
-		}
+		socket.leave(data, () => {
+			console.info(`Unsubscribed ${data}`);
+		});
 	});
 });
 
@@ -143,14 +139,15 @@ const $ = {};
 			const block = await $.consensus.getBlock(hash, true);
 			const transactions = block.body.transactions;
 			for (const transaction of transactions) {
+				const address = transaction.recipient.toUserFriendlyAddress()
 				const data = {
 					txid: transaction.hash().toPlain(),
 					value: transaction.value,
-					recipient: transaction.recipient.toUserFriendlyAddress()
+					recipient: address
 				};
-				server.to('inv').emit('tx', data);
+				server.to(address.replace(/ /g,'')).emit('tx', data);
 				console.log(`TX sent ${data.txid}`);
-			}	
+			}
 		}
 	});
 
